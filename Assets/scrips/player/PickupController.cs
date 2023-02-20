@@ -151,9 +151,8 @@ public class PickupController  : MonoBehaviour
                 corners[Array.IndexOf(distances, shortestValue)]));
             
         float scaleFactor = Vector3.Distance(mainCam.position, obj.transform.position) / initialDistance;
-        obj.transform.localScale *= scaleFactor; 
-        float mass = obj.GetComponent<Rigidbody>().mass;
-        obj.GetComponent<Rigidbody>().mass = (mass * scaleFactor) * (mass * scaleFactor) * (mass * scaleFactor);
+        obj.transform.localScale *= scaleFactor;
+        obj.GetComponent<Rigidbody>().mass *= scaleFactor;
     }
     
 }

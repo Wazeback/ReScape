@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.1838709, g: 0.22901754, b: 0.30311245, a: 1}
+  m_IndirectSpecularColor: {r: 0.1838709, g: 0.2290171, b: 0.3031122, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -748,8 +748,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 2
   maxSpeed: 20
-  jumpForce: 5
-  groundCheckDistance: 1.1
+  jumpForce: 20
+  groundCheckDistance: 1.5
   groundLayer:
     serializedVersion: 2
     m_Bits: 1

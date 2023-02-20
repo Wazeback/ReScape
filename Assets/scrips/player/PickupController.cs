@@ -39,7 +39,7 @@ public class PickupController  : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.E)) {
             if (obj) 
-                dropObj();
+                DropObj();
             else {
                 RaycastHit hit;
                 bool raycast = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, dist);
@@ -62,7 +62,7 @@ public class PickupController  : MonoBehaviour
         }
     }
     
-    private void dropObj()
+    private void DropObj()
     {
         resizingPickObj = false;
         objRb.transform.gameObject.layer = LayerMask.NameToLayer("Default");
@@ -151,7 +151,9 @@ public class PickupController  : MonoBehaviour
                 corners[Array.IndexOf(distances, shortestValue)]));
             
         float scaleFactor = Vector3.Distance(mainCam.position, obj.transform.position) / initialDistance;
-        obj.transform.localScale *= scaleFactor;
+        obj.transform.localScale *= scaleFactor; 
+        float mass = obj.GetComponent<Rigidbody>().mass;
+        obj.GetComponent<Rigidbody>().mass = (mass * scaleFactor) * (mass * scaleFactor) * (mass * scaleFactor);
     }
     
 }

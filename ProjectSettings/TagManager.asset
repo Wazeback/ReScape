@@ -6,6 +6,8 @@ TagManager:
   tags:
   - whatIsGround
   - pickup
+  - PickUpCube
+  - PickUpPolyShape
   layers:
   - Default
   - TransparentFX
@@ -28,7 +30,7 @@ TagManager:
   - 
   - 
   - WhatIsPickedUp
-  - 
+  - WhatIsGround
   - 
   - 
   - 

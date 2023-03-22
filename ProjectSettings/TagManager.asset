@@ -4,10 +4,11 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - whatIsGround
-  - pickup
   - PickUpCube
   - PickUpPolyShape
+  - ToggleDoor
+  - PickUpItem
+  - ToggleBreaker
   layers:
   - Default
   - TransparentFX

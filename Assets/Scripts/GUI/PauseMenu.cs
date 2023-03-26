@@ -10,11 +10,13 @@ public class PauseMenu : MonoBehaviour
     public GameObject SettingsMenuUI;
     public GameObject ControlsMenuUI;
     public GameObject PlayerCamera;
-    
+    private GameObject commandInput;
+
     // Start is called before the first frame update
     void Start()
     {
-        
+         commandInput = GameObject.Find("CommandInput");
+         commandInput.SetActive(false);
     }
 
     // Update is called once per frame
@@ -39,6 +41,7 @@ public class PauseMenu : MonoBehaviour
         PauseMenuUI.SetActive(false);
         SettingsMenuUI.SetActive(false);
         ControlsMenuUI.SetActive(false);
+        commandInput.SetActive(false);
         Time.timeScale = 1f;
         GameIsPaused = false;
         PlayerCamera.GetComponent<PlayerCam>().paused = false;
@@ -51,6 +54,7 @@ public class PauseMenu : MonoBehaviour
     {
         Background.SetActive(true);
         PauseMenuUI.SetActive(true);
+        commandInput.SetActive(true);
         Time.timeScale = 0f;
         GameIsPaused = true;
         PlayerCamera.GetComponent<PlayerCam>().paused = true;

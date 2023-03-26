@@ -42,9 +42,9 @@ public class HandleCursor : MonoBehaviour
                 cursorImage.sprite = toggleBreaker;
             }
         }
-        // Set the alpha value of the material's color based on the value of the 'paused' variable.
-        color.a = paused ? 0f : 1f;
-        cursorImage.material.color = color;
+        // // Set the alpha value of the material's color based on the value of the 'paused' variable.
+        // color.a = paused ? 0f : 1f;
+        // cursorImage.material.color = color;
         
     }
     

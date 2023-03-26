@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
 
 // TODO: Set a min distance away from the camera so that the object wont fill the screen:: DONE
 // TODO: Reminder to learn the way the the mesh.verticies is returned for even better filter.
@@ -13,21 +14,20 @@ public class PickupController  : MonoBehaviour
     private GameObject obj;
     private Rigidbody objRb;
     private GameObject pickObj;
+    private Renderer compRender;
+    private MeshFilter objMesh;
 
     private float[] distances;
     private Vector3[] corners;
+    private Vector3 direction;
     
     private bool resize;
     private bool polyShape;
     
     public float dist;
-
-    private Vector3 direction;
-
-    // Handles Cursor and raycasting for resizing if a object has been picked up
-    private void FixedUpdate()
+    
+    private void FixedUpdate()  // Handles Cursor and raycasting for resizing if a object has been picked up
     {
-
         if (resize) { // If an object is currently being resized, handle the resizing
             if (polyShape) {  // Get the corners of the object being resized.
                 corners = GetNonCubicObjectPoints(); }
@@ -40,39 +40,25 @@ public class PickupController  : MonoBehaviour
             int i = 0;
            
             foreach (Vector3 corner in corners) { // For each corner of the object, calculate its distance from the camera, taking into account collisions with other objects.
-                var distA = (corner - mainCam.position);
-                var dirA = distA / distA.magnitude;
-                Vector3 direction = dirA;
-                
-                
-                // Debug.Log(dirA);
-                if (mainCam.position.z > corner.z)
-                {
-                    Debug.Log(mainCam.position);
-                    Debug.Log("-----------------");
-                    Debug.Log(corner);
-                    Debug.Log("-----------------");
-                }
-
-                if (Physics.Raycast(mainCam.position, direction, out hit, Mathf.Infinity, ~(1 << obj.layer))) {
-                    distances[i] = Vector3.Distance(mainCam.position, hit.point);
-                    i++; 
+                direction = (corner - mainCam.position).normalized;
+                if (Physics.Raycast(mainCam.position, direction, out hit, 400, ~(1 << obj.layer))) {
+                    distances[i] = Vector3.Distance(mainCam.position, hit.point); 
+                    i++;
                 }
                 Debug.DrawLine(mainCam.position, corner + direction * dist, Color.red, 0.1f); // Draw a red line to visualize the raycast used to determine the distance to the object.
             }
             
             float shortestValue = Mathf.Min(distances);  // Find the shortest distance calculated in the previous step.
-            
+            Vector3 cornerPoint = corners[Array.IndexOf(distances, shortestValue)];
+            if (shortestValue >= 0.0f) {
                 obj.transform.position = // Move the object so that it is at the shortest distance from the camera, but in the same direction as its original position.
                     mainCam.position + mainCam.forward * 
-                    (shortestValue - Vector3.Distance(obj.transform.position, 
-                        corners[Array.IndexOf(distances, shortestValue)]));
-
-
-
-                float scaleFactor = Vector3.Distance(mainCam.position, obj.transform.position) / initialDistance; // Calculate the scale factor based on the new distance between the camera and the object, and apply it to the object's scale and mass.
-            obj.transform.localScale *= scaleFactor;
-            obj.GetComponent<Rigidbody>().mass *= scaleFactor;
+                    (shortestValue - Vector3.Distance(obj.transform.position, cornerPoint));
+                
+                    float scaleFactor = Vector3.Distance(mainCam.position, obj.transform.position) / initialDistance; // Calculate the scale factor based on the new distance between the camera and the object, and apply it to the object's scale and mass.
+                    obj.transform.localScale *= scaleFactor;
+                    objRb.mass *= scaleFactor;
+            }
         }
     }
     
@@ -91,16 +77,18 @@ public class PickupController  : MonoBehaviour
                 objTrans.parent = null; // Remove the object's parent
                 obj = null; // Clear the reference to the object
             }
-
-            else {
+            else
+            {
                 // If not, check if the player is looking at a pickup object within reach and pick it up
-                RaycastHit hit; // Cast a ray forward from the player's position to see if there's a pickup object within reach
-                bool raycast = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward),
-                    out hit, dist);
+                RaycastHit
+                    hit; // Cast a ray forward from the player's position to see if there's a pickup object within reach
+                bool raycast = Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, dist);
                 if (raycast && (hit.transform.gameObject.CompareTag("PickUpCube") || hit.transform.gameObject.CompareTag("PickUpPolyShape"))) {
                     pickObj = hit.transform.gameObject;
                     pickObj.layer = LayerMask.NameToLayer("WhatIsPickedUp");
+                    compRender = pickObj.GetComponent<Renderer>();
                     objRb = pickObj.GetComponent<Rigidbody>(); // Get the object's Rigidbody component and disable gravity and freeze all constraints
+                    objMesh = pickObj.GetComponent<MeshFilter>();
                     objRb.useGravity = false;
                     objRb.constraints = RigidbodyConstraints.FreezeAll;
                     objRb.detectCollisions = false;
@@ -115,20 +103,19 @@ public class PickupController  : MonoBehaviour
             }
         }
     }
-
-
+    
     // Returns an array of 30 Vector3 points that represent the corners, edges, and midpoints of a given object.
     // The array is used for collision detection and object manipulation.
     private Vector3[] GetCubicObjectPoints()
     {
-        Renderer compRender = obj.GetComponent<Renderer>();
+        
         corners = new Vector3[30];  // Initialize an array of size 30 to hold all points.
         Transform objPos = obj.transform;  // Get the object's position and rotation.
         Vector3 center = compRender.bounds.center;  // Calculate the center point of the object.
         Quaternion referenceRotation = objPos.rotation.normalized;  // Calculate the reference rotation of the object.
         obj.transform.rotation = Quaternion.Euler(0,0,0);
         Vector3 extents = compRender.bounds.extents;  // Calculate the extents of the object.
-        obj.transform.rotation = referenceRotation;
+        objPos.rotation = referenceRotation;
         
         for (UInt16 it = 0; it <= 7; it++) // corners of the object, with an index scheme that allows for bitwise operations
             corners[it] = center + referenceRotation * new Vector3(
@@ -173,18 +160,13 @@ public class PickupController  : MonoBehaviour
     // TODO: This method is very expensive to use and should only be used in some cases. It cast around 3 time the amount of rays it should cast and generates a fps drop of around 20fps per picked up object.
     private Vector3[] GetNonCubicObjectPoints()
     {
-        corners = obj.GetComponent<MeshFilter>().mesh.vertices; // Get object's vertices in local space
-        HashSet<Vector3> uniquePoints = new HashSet<Vector3>();
-        // Transform vertices to world space with current rotation and add them to the uniquePoints hashset
+        corners = objMesh.mesh.vertices; // Get object's vertices in local space
+        HashSet<Vector3> uniquePoints = new HashSet<Vector3>(); // Transform vertices to world space with current rotation and add them to the uniquePoints hashset
         for (int i = 0; i < corners.Length; i++) {
             Vector3 worldPoint = obj.transform.TransformPoint(corners[i]);
             if (!uniquePoints.Contains(worldPoint)) 
                 uniquePoints.Add(worldPoint);
         }
-
-        // Array a = new List<Vector3>(uniquePoints).ToArray();
-        //
-        // Debug.Log( a.Length);
         return new List<Vector3>(uniquePoints).ToArray(); // Convert the hashset back to an array and return it
     }
 
